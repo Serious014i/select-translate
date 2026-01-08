@@ -9,8 +9,21 @@ let pdfPollingTabId = null;
 let lastPdfSelection = '';
 
 loadCacheFromStorage();
-
 initializePauseState();
+
+chrome.runtime.onSuspend?.addListener(async () => {
+  const result = await chrome.storage.sync.get(['settings']);
+  const settings = result.settings || {};
+  settings.isPaused = true;
+  await chrome.storage.sync.set({ settings });
+});
+
+self.addEventListener('beforeunload', async () => {
+  const result = await chrome.storage.sync.get(['settings']);
+  const settings = result.settings || {};
+  settings.isPaused = true;
+  await chrome.storage.sync.set({ settings });
+});
 
 async function loadCacheFromStorage() {
   try {
@@ -21,21 +34,25 @@ async function loadCacheFromStorage() {
         memoryCache.set(key, value);
       });
     }
-  } catch (e) {
-  }
+  } catch (e) {}
 }
 
 async function initializePauseState() {
   try {
     const result = await chrome.storage.sync.get(['settings']);
-    isExtensionPaused = result.settings?.isPaused !== false;
-    
-    await chrome.action.setBadgeText({ text: isExtensionPaused ? '⏸' : '' });
+    const settings = result.settings || {
+      targetLang: 'en',
+      sourceLang: 'auto',
+      autoTranslate: true,
+      showPopup: true
+    };
+
+    settings.isPaused = true;
+    await chrome.storage.sync.set({ settings });
+    isExtensionPaused = true;
+
+    await chrome.action.setBadgeText({ text: '⏸' });
     await chrome.action.setBadgeBackgroundColor({ color: '#ff9800' });
-    
-    if (!isExtensionPaused) {
-      connectToNativeHost();
-    }
   } catch (e) {
     isExtensionPaused = true;
   }
@@ -52,11 +69,11 @@ async function checkForPdfTab() {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tabs[0]) {
       const tab = tabs[0];
-      const isPdf = tab.url?.toLowerCase().endsWith('.pdf') || 
+      const isPdf = tab.url?.toLowerCase().endsWith('.pdf') ||
                     tab.url?.includes('pdfjs') ||
                     tab.url?.includes('/pdf') ||
                     tab.title?.toLowerCase().includes('.pdf');
-      
+
       if (isPdf && pdfPollingTabId !== tab.id) {
         pdfPollingTabId = tab.id;
         pollPdfSelection(tab.id);
@@ -64,20 +81,19 @@ async function checkForPdfTab() {
         pdfPollingTabId = null;
       }
     }
-  } catch (e) {
-  }
+  } catch (e) {}
 }
 
 async function pollPdfSelection(tabId) {
   if (pdfPollingTabId !== tabId) return;
-  
+
   try {
     const settings = await chrome.storage.sync.get(['settings']);
     if (settings.settings?.isPaused) {
       setTimeout(() => pollPdfSelection(tabId), 1000);
       return;
     }
-    
+
     const results = await chrome.scripting.executeScript({
       target: { tabId: tabId },
       func: () => {
@@ -85,19 +101,17 @@ async function pollPdfSelection(tabId) {
         return selection ? selection.toString().trim() : '';
       }
     });
-    
+
     if (results && results[0] && results[0].result) {
       const text = results[0].result;
-      
+
       if (text && text.length >= 2 && text.length < 5000 && text !== lastPdfSelection) {
         lastPdfSelection = text;
-        
         translateAndSend(text, tabId);
       }
     }
-  } catch (e) {
-  }
-  
+  } catch (e) {}
+
   if (pdfPollingTabId === tabId) {
     setTimeout(() => pollPdfSelection(tabId), 500);
   }
@@ -106,7 +120,7 @@ async function pollPdfSelection(tabId) {
 function showTranslationPopup(original, translated, detectedLang) {
   const existing = document.getElementById('qt-injected-popup');
   if (existing) existing.remove();
-  
+
   const popup = document.createElement('div');
   popup.id = 'qt-injected-popup';
   popup.style.cssText = `
@@ -122,7 +136,7 @@ function showTranslationPopup(original, translated, detectedLang) {
     z-index: 2147483647;
     overflow: hidden;
   `;
-  
+
   popup.innerHTML = `
     <div style="padding: 12px 15px; background: linear-gradient(135deg, #2196F3, #1976D2); color: white; display: flex; justify-content: space-between; align-items: center;">
       <span style="font-weight: 600;">🌐 Translation</span>
@@ -136,33 +150,32 @@ function showTranslationPopup(original, translated, detectedLang) {
       <span style="font-size: 11px; color: #999;">${detectedLang || ''}</span>
     </div>
   `;
-  
+
   document.body.appendChild(popup);
-  
+
   document.getElementById('qt-close-btn').onclick = () => popup.remove();
-  
+
   document.getElementById('qt-copy-btn').onclick = () => {
     navigator.clipboard.writeText(translated);
     document.getElementById('qt-copy-btn').textContent = '✓ Copied!';
   };
-  
+
   setTimeout(() => popup.remove(), 30000);
 }
 
 function connectToNativeHost() {
   try {
     nativePort = chrome.runtime.connectNative(NATIVE_HOST);
-    
-    nativePort.onMessage.addListener(async (message) => {
 
+    nativePort.onMessage.addListener(async (message) => {
       if (message.action === 'translate' && message.text) {
         const settings = await chrome.storage.sync.get(['settings']);
         const { sourceLang = 'auto', targetLang = 'en', isPaused = false } = settings.settings || {};
-        
+
         if (isPaused) return;
-        
+
         const result = await translateText(message.text, sourceLang, targetLang);
-        
+
         if (result.success) {
           addToHistory({
             original: message.text,
@@ -171,7 +184,7 @@ function connectToNativeHost() {
             targetLang: targetLang,
             timestamp: Date.now()
           });
-          
+
           const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
           if (tabs[0]) {
             try {
@@ -200,16 +213,14 @@ function connectToNativeHost() {
         }
       }
     });
-    
+
     nativePort.onDisconnect.addListener(() => {
       nativePort = null;
       if (!isExtensionPaused) {
         setTimeout(connectToNativeHost, 5000);
       }
     });
-    
-  } catch (e) {
-  }
+  } catch (e) {}
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -218,225 +229,115 @@ chrome.runtime.onInstalled.addListener(() => {
     title: 'Translate "%s"',
     contexts: ['selection']
   });
-  
-  chrome.contextMenus.create({
-    id: 'translate-native',
-    title: 'Translate from any app (Native)',
-    contexts: ['action']
-  });
 
-  chrome.storage.sync.get(['settings'], (result) => {
-    if (!result.settings) {
-      chrome.storage.sync.set({
-        settings: {
-          targetLang: 'en',
-          sourceLang: 'auto',
-          autoTranslate: true,
-          isPaused: true,
-          showPopup: true
-        }
-      });
-    }
-  });
-
-  chrome.storage.local.get(['history', 'translationCache'], (result) => {
-    if (!result.history) {
-      chrome.storage.local.set({ history: [] });
-    }
-    if (!result.translationCache) {
-      chrome.storage.local.set({ translationCache: {} });
-    } else {
-      Object.entries(result.translationCache).forEach(([key, value]) => {
-        memoryCache.set(key, value);
-      });
+  chrome.storage.sync.set({
+    settings: {
+      targetLang: 'en',
+      sourceLang: 'auto',
+      autoTranslate: true,
+      isPaused: true,
+      showPopup: true
     }
   });
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === 'translate-selection' && info.selectionText) {
-    translateAndSend(info.selectionText, tab.id);
-  }
-  
-  if (info.menuItemId === 'translate-native') {
-    const text = await getSelectionFromNative();
-    if (text) {
-      translateAndShowPopup(text);
-    }
-  }
-});
+    const settings = await chrome.storage.sync.get(['settings']);
+    const { sourceLang = 'auto', targetLang = 'en' } = settings.settings || {};
 
-async function getSelectionFromNative() {
-  return new Promise((resolve) => {
-    try {
-      const port = chrome.runtime.connectNative(NATIVE_HOST);
-      
-      port.onMessage.addListener((response) => {
-        port.disconnect();
-        if (response.success && response.text) {
-          resolve(response.text);
-        } else {
-          resolve(null);
-        }
-      });
-      
-      port.onDisconnect.addListener(() => {
-        const error = chrome.runtime.lastError;
-        if (error) {
-        }
-        resolve(null);
-      });
-      
-      port.postMessage({ action: 'getSelection' });
-      
-      setTimeout(() => {
-        port.disconnect();
-        resolve(null);
-      }, 2000);
-    } catch (e) {
-      resolve(null);
-    }
-  });
-}
+    const result = await translateText(info.selectionText, sourceLang, targetLang);
 
-async function translateAndShowPopup(text) {
-  const settings = await chrome.storage.sync.get(['settings']);
-  const { sourceLang = 'auto', targetLang = 'en' } = settings.settings || {};
-  
-  const result = await translateText(text, sourceLang, targetLang);
-  
-  if (result.success) {
-    addToHistory({
-      original: text,
-      translated: result.translatedText,
-      sourceLang: result.detectedLanguage || sourceLang,
-      targetLang: targetLang,
-      timestamp: Date.now()
-    });
-    
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tabs[0]) {
-      chrome.tabs.sendMessage(tabs[0].id, {
+    if (result.success) {
+      chrome.tabs.sendMessage(tab.id, {
         action: 'showTranslation',
-        original: text,
+        original: info.selectionText,
         translated: result.translatedText,
         suggestions: result.suggestions,
         detectedLang: result.detectedLanguage,
         fromCache: result.fromCache
-      }).catch(() => {
-        chrome.action.openPopup();
+      });
+
+      addToHistory({
+        original: info.selectionText,
+        translated: result.translatedText,
+        sourceLang: result.detectedLanguage || sourceLang,
+        targetLang: targetLang,
+        timestamp: Date.now()
       });
     }
-  }
-}
-
-chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command === 'translate-selection') {
-    const text = await getSelectionFromTab(tab.id);
-    if (text) {
-      translateAndSend(text, tab.id);
-    }
-  } else if (command === 'toggle-pause') {
-    togglePause(tab.id);
   }
 });
 
-async function getSelectionFromTab(tabId) {
-  try {
-    const results = await chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      func: () => {
-        const selection = window.getSelection();
-        if (selection && selection.toString().trim()) {
-          return selection.toString().trim();
-        }
-        
-        const embed = document.querySelector('embed[type="application/pdf"]');
-        if (embed && embed.postMessage) {
-          return null;
-        }
-        
-        return '';
-      }
-    });
-    
-    if (results && results[0] && results[0].result) {
-      return results[0].result;
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command === 'translate-selection') {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0]) {
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'getSelection' });
     }
-    
-    return new Promise((resolve) => {
-      chrome.tabs.sendMessage(tabId, { action: 'getSelection' }, (response) => {
-        if (chrome.runtime.lastError) {
-          resolve(null);
-        } else {
-          resolve(response?.text || null);
-        }
-      });
-    });
-  } catch (e) {
-    return null;
+  } else if (command === 'toggle-pause') {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    togglePause(tabs[0]?.id);
   }
-}
+});
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'translate') {
-    translateText(request.text, request.sourceLang, request.targetLang)
-      .then(result => sendResponse(result))
-      .catch(error => sendResponse({ success: false, error: error.message }));
+    (async () => {
+      const settings = await chrome.storage.sync.get(['settings']);
+      const { sourceLang = 'auto', targetLang = 'en' } = settings.settings || {};
+
+      const result = await translateText(request.text, sourceLang, targetLang);
+      sendResponse(result);
+
+      if (result.success) {
+        addToHistory({
+          original: request.text,
+          translated: result.translatedText,
+          sourceLang: result.detectedLanguage || sourceLang,
+          targetLang: targetLang,
+          timestamp: Date.now()
+        });
+      }
+    })();
     return true;
   }
-  
-  if (request.action === 'addToHistory') {
-    addToHistory(request.item);
-    sendResponse({ success: true });
-  }
-  
+
   if (request.action === 'getHistory') {
     chrome.storage.local.get(['history'], (result) => {
       sendResponse({ history: result.history || [] });
     });
     return true;
   }
-  
+
   if (request.action === 'clearHistory') {
-    chrome.storage.local.set({ history: [] });
-    sendResponse({ success: true });
+    chrome.storage.local.set({ history: [] }, () => {
+      sendResponse({ success: true });
+    });
+    return true;
   }
-  
+
+  if (request.action === 'exportHistory') {
+    chrome.storage.local.get(['history'], (result) => {
+      sendResponse({ history: result.history || [] });
+    });
+    return true;
+  }
+
   if (request.action === 'togglePause') {
-    togglePause(sender.tab?.id);
-    sendResponse({ success: true });
+    togglePause(sender.tab?.id).then(isPaused => {
+      sendResponse({ isPaused });
+    });
+    return true;
   }
-  
+
   if (request.action === 'getPauseState') {
     chrome.storage.sync.get(['settings'], (result) => {
       sendResponse({ isPaused: result.settings?.isPaused !== false });
     });
     return true;
   }
-  
-  if (request.action === 'getCacheStats') {
-    sendResponse({ 
-      cacheSize: memoryCache.size,
-      maxSize: MAX_CACHE_SIZE
-    });
-    return true;
-  }
-  
-  if (request.action === 'clearCache') {
-    memoryCache.clear();
-    chrome.storage.local.set({ translationCache: {} });
-    sendResponse({ success: true });
-    return true;
-  }
-  
-  if (request.action === 'getNativeSelection') {
-    getSelectionFromNative().then(text => {
-      sendResponse({ success: !!text, text: text || '' });
-    });
-    return true;
-  }
-  
+
   if (request.action === 'checkNativeHost') {
     checkNativeHost().then(available => {
       sendResponse({ available });
@@ -449,18 +350,18 @@ async function checkNativeHost() {
   return new Promise((resolve) => {
     try {
       const port = chrome.runtime.connectNative(NATIVE_HOST);
-      
+
       port.onMessage.addListener((response) => {
         port.disconnect();
         resolve(response.success === true);
       });
-      
+
       port.onDisconnect.addListener(() => {
         resolve(false);
       });
-      
+
       port.postMessage({ action: 'ping' });
-      
+
       setTimeout(() => {
         port.disconnect();
         resolve(false);
@@ -480,11 +381,11 @@ async function togglePause(tabId) {
     isPaused: true,
     showPopup: true
   };
-  
+
   settings.isPaused = !settings.isPaused;
   isExtensionPaused = settings.isPaused;
   await chrome.storage.sync.set({ settings });
-  
+
   if (settings.isPaused) {
     if (nativePort) {
       nativePort.disconnect();
@@ -496,27 +397,27 @@ async function togglePause(tabId) {
       connectToNativeHost();
     }
   }
-  
+
   const tabs = await chrome.tabs.query({});
   tabs.forEach(tab => {
-    chrome.tabs.sendMessage(tab.id, { 
-      action: 'pauseStateChanged', 
-      isPaused: settings.isPaused 
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'pauseStateChanged',
+      isPaused: settings.isPaused
     }).catch(() => {});
   });
-  
+
   await chrome.action.setBadgeText({ text: settings.isPaused ? '⏸' : '' });
   await chrome.action.setBadgeBackgroundColor({ color: settings.isPaused ? '#ff9800' : '#4CAF50' });
-  
+
   return settings.isPaused;
 }
 
 async function translateAndSend(text, tabId) {
   const settings = await chrome.storage.sync.get(['settings']);
   const { sourceLang = 'auto', targetLang = 'en' } = settings.settings || {};
-  
+
   const result = await translateText(text, sourceLang, targetLang);
-  
+
   if (result.success) {
     chrome.tabs.sendMessage(tabId, {
       action: 'showTranslation',
@@ -526,7 +427,7 @@ async function translateAndSend(text, tabId) {
       detectedLang: result.detectedLanguage,
       fromCache: result.fromCache
     });
-    
+
     addToHistory({
       original: text,
       translated: result.translatedText,
@@ -544,7 +445,6 @@ function getCacheKey(text, sourceLang, targetLang) {
 function getFromCache(text, sourceLang, targetLang) {
   const key = getCacheKey(text, sourceLang, targetLang);
   const cached = memoryCache.get(key);
-  
   if (cached) {
     return cached;
   }
@@ -553,30 +453,30 @@ function getFromCache(text, sourceLang, targetLang) {
 
 async function saveToCache(text, sourceLang, targetLang, result) {
   const key = getCacheKey(text, sourceLang, targetLang);
-  
+
   const cacheEntry = {
     translatedText: result.translatedText,
     detectedLanguage: result.detectedLanguage,
     suggestions: result.suggestions,
     timestamp: Date.now()
   };
-  
+
   memoryCache.set(key, cacheEntry);
-  
+
   if (memoryCache.size > MAX_CACHE_SIZE) {
     const entries = Array.from(memoryCache.entries());
     entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
     const toRemove = entries.slice(0, entries.length - MAX_CACHE_SIZE);
     toRemove.forEach(([k]) => memoryCache.delete(k));
   }
-  
+
   persistCacheThrottled();
 }
 
 let persistTimeout = null;
 function persistCacheThrottled() {
   if (persistTimeout) return;
-  
+
   persistTimeout = setTimeout(() => {
     persistCacheNow();
     persistTimeout = null;
@@ -587,8 +487,7 @@ function persistCacheNow() {
   try {
     const cacheObj = Object.fromEntries(memoryCache);
     chrome.storage.local.set({ translationCache: cacheObj });
-  } catch (e) {
-  }
+  } catch (e) {}
 }
 
 async function translateText(text, sourceLang = 'auto', targetLang = 'en') {
@@ -602,18 +501,18 @@ async function translateText(text, sourceLang = 'auto', targetLang = 'en') {
       fromCache: true
     };
   }
-  
+
   try {
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&dt=bd&dj=1&q=${encodeURIComponent(text)}`;
-    
+
     const response = await fetch(url);
     const data = await response.json();
-    
+
     let translatedText = '';
     if (data.sentences) {
       translatedText = data.sentences.map(s => s.trans || '').join('');
     }
-    
+
     let suggestions = [];
     if (data.dict) {
       data.dict.forEach(entry => {
@@ -623,7 +522,7 @@ async function translateText(text, sourceLang = 'auto', targetLang = 'en') {
       });
       suggestions = [...new Set(suggestions)].slice(0, 5);
     }
-    
+
     const result = {
       success: true,
       translatedText,
@@ -631,9 +530,9 @@ async function translateText(text, sourceLang = 'auto', targetLang = 'en') {
       suggestions,
       fromCache: false
     };
-    
+
     await saveToCache(text, sourceLang, targetLang, result);
-    
+
     return result;
   } catch (error) {
     return {
@@ -646,13 +545,13 @@ async function translateText(text, sourceLang = 'auto', targetLang = 'en') {
 async function addToHistory(item) {
   const result = await chrome.storage.local.get(['history']);
   let history = result.history || [];
-  
+
   const isDuplicate = history.some(h =>
-    h.original === item.original && 
+    h.original === item.original &&
     h.targetLang === item.targetLang &&
     (Date.now() - h.timestamp) < 5000
   );
-  
+
   if (!isDuplicate) {
     history.unshift(item);
     if (history.length > 500) {

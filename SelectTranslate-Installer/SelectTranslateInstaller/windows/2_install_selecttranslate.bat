@@ -127,22 +127,33 @@ set "CHROME_EXTENSIONS_DIR=%LOCALAPPDATA%\Google\Chrome\User Data\Default\Extens
 set "EDGE_EXTENSIONS_DIR=%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\Extensions"
 set "SCRIPT_DIR=%~dp0"
 
-set "WEBSTORE_URL=https://github.com/Serious014i/select-translate/archive/refs/heads/master.zip"
-set "EXTENSION_ID="
+REM ============================================================
+REM CHANGE THIS URL to your GitHub repository page (not ZIP!)
+REM ============================================================
+set "GITHUB_URL=https://github.com/Serious014i/select-translate"
 
-echo  [STEP 1/5] Opening Chrome Web Store...
 echo.
-echo  --------------------------------------------------------
-echo   Please install the SelectTranslate extension:
-echo   1. Click "Add to Chrome" in the browser window
-echo   2. Click "Add extension" in the popup
-echo   3. Come back here and press any key
-echo  --------------------------------------------------------
+echo  ====================================================
+echo   EXTENSION INSTALLATION
+echo  ====================================================
 echo.
-
-start "" "%WEBSTORE_URL%"
-
-echo  Waiting for you to install the extension...
+echo  The extension needs to be installed manually:
+echo.
+echo  Option 1: Load from GitHub (Recommended)
+echo   1. Go to: %GITHUB_URL%
+echo   2. Click "Code" then "Download ZIP"
+echo   3. Extract the ZIP file
+echo   4. Open Chrome and go to: chrome://extensions/
+echo   5. Enable "Developer mode" (top right)
+echo   6. Click "Load unpacked"
+echo   7. Select the extracted extension folder
+echo.
+echo  Opening GitHub page now...
+start "" "%GITHUB_URL%"
+echo.
+echo  ====================================================
+echo   After installing the extension, press any key
+echo  ====================================================
 echo.
 pause
 
@@ -176,7 +187,8 @@ if "%EXTENSION_ID%"=="" (
     echo.
     echo  Please find it manually:
     echo   1. Open Chrome and go to: chrome://extensions/
-    echo   2. Find "SelectTranslate" and copy the ID
+    echo   2. Enable "Developer mode" if not already
+    echo   3. Find "SelectTranslate" and copy the ID
     echo      (looks like: abcdefghijklmnopqrstuvwxyz)
     echo.
     set /p EXTENSION_ID="  Enter Extension ID: "
@@ -295,7 +307,9 @@ echo  ====================================================
 echo.
 echo  NEXT STEPS:
 echo   1. RESTART CHROME COMPLETELY (close all windows)
-echo   2. Select text in any app to test
+echo   2. Click the SelectTranslate icon
+echo   3. Click Play button to start
+echo   4. Select text in any app to test
 echo.
 echo  TO TEST MANUALLY:
 echo   Open Command Prompt and run:
