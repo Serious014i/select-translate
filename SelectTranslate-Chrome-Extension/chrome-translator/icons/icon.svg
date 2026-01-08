@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4FC3F7"/>
+      <stop offset="100%" style="stop-color:#2196F3"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3)"/>
+      <stop offset="50%" style="stop-color:rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  <!-- Shine effect -->
+  <rect width="128" height="128" rx="28" fill="url(#shine)"/>
+  <!-- Globe circle -->
+  <circle cx="64" cy="64" r="38" fill="none" stroke="white" stroke-width="4" opacity="0.9"/>
+  <!-- Globe horizontal line -->
+  <ellipse cx="64" cy="64" rx="38" ry="16" fill="none" stroke="white" stroke-width="3" opacity="0.7"/>
+  <!-- Globe vertical line -->
+  <ellipse cx="64" cy="64" rx="16" ry="38" fill="none" stroke="white" stroke-width="3" opacity="0.7"/>
+  <!-- Selection cursor -->
+  <path d="M88 88 L108 108 L102 114 L82 94 Z" fill="#FFC107" stroke="white" stroke-width="2"/>
+  <rect x="80" y="80" width="14" height="14" rx="2" fill="none" stroke="#FFC107" stroke-width="3"/>
+  <!-- Text A -->
+  <text x="50" y="75" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="white">A</text>
+  <!-- Arrow -->
+  <text x="68" y="72" font-family="Arial, sans-serif" font-size="18" fill="rgba(255,255,255,0.8)">→</text>
+  <!-- Text character (Chinese/Japanese style) -->
+  <text x="82" y="58" font-family="Arial, sans-serif" font-size="18" fill="white" opacity="0.9">文</text>
+</svg>

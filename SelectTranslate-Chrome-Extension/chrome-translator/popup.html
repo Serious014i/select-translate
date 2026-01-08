@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="title">🌐 SelectTranslate</span>
+      <button id="pauseBtn" class="pause-btn" title="Pause/Resume (Ctrl+Shift+P)">
+        <span id="pauseIcon">▶</span>
+      </button>
+    </div>
+    
+    <div id="pauseBanner" class="pause-banner hidden">
+      ⏸ Translation Paused
+    </div>
+    
+    <div class="lang-row">
+      <select id="sourceLang" class="lang-select">
+        <option value="auto">🔍 Auto-detect</option>
+      </select>
+      <button id="swapBtn" class="swap-btn" title="Swap languages">⇄</button>
+      <select id="targetLang" class="lang-select"></select>
+    </div>
+    
+    <div class="input-section">
+      <textarea id="inputText" placeholder="Enter text to translate..." rows="3"></textarea>
+      <div class="input-actions">
+        <button id="clipboardBtn" class="icon-btn primary" title="Paste & Translate (for PDFs)">📋 Paste & Translate</button>
+        <button id="nativeBtn" class="icon-btn" title="Get from any app (Native)">📥</button>
+        <button id="clearBtn" class="icon-btn" title="Clear">🗑</button>
+      </div>
+    </div>
+    
+    <button id="translateBtn" class="translate-btn">
+      <span id="translateText">🔄 Translate</span>
+    </button>
+    
+    <div class="output-section">
+      <div id="outputText" class="output-text">Translation will appear here...</div>
+      <div id="suggestions" class="suggestions hidden"></div>
+      <button id="copyBtn" class="copy-btn" title="Copy translation">📋 Copy</button>
+    </div>
+    
+    <div class="tabs">
+      <button class="tab active" data-tab="settings">⚙️ Settings</button>
+      <button class="tab" data-tab="history">📜 History</button>
+    </div>
+    
+    <div id="settingsTab" class="tab-content">
+      <label class="checkbox-row">
+        <input type="checkbox" id="autoTranslate" checked>
+        <span>Auto-translate on selection</span>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="showPopup" checked>
+        <span>Show popup near selection</span>
+      </label>
+      <div class="cache-info">
+        <span>💾 Cache: <span id="cacheCount">0</span>/5000 translations</span>
+        <button id="clearCacheBtn" class="small-btn">Clear</button>
+      </div>
+    </div>
+    
+    <div id="historyTab" class="tab-content hidden">
+      <div class="history-header">
+        <span id="historyCount">0 items</span>
+        <div class="history-actions">
+          <button id="exportCsvBtn" class="small-btn">📄 CSV</button>
+          <button id="exportExcelBtn" class="small-btn">📊 XLSX</button>
+          <button id="clearHistoryBtn" class="small-btn danger">🗑</button>
+        </div>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </div>
+    
+    <div class="footer">
+      <div class="shortcuts">
+        <span class="shortcut">Ctrl+Shift+T translate</span>
+        <span class="shortcut">📄 PDF: Copy text → Click "Paste & Translate"</span>
+      </div>
+      <a href="#" id="donateLink" class="donate-link" title="Support development">☕ Donate</a>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+.qt-popup {
+  position: fixed;
+  z-index: 2147483647;
+  width: 350px;
+  max-width: calc(100vw - 40px);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  animation: qt-fadeIn 0.15s ease-out;
+  overflow: hidden;
+  pointer-events: auto;
+  isolation: isolate;
+}
+
+.qt-popup.qt-hiding {
+  animation: qt-fadeOut 0.15s ease-out;
+}
+
+.qt-popup.qt-pinned {
+  box-shadow: 0 4px 20px rgba(33, 150, 243, 0.3), 0 0 0 2px #2196F3;
+}
+
+@keyframes qt-fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes qt-fadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-10px); }
+}
+
+.qt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  color: white;
+  cursor: grab;
+  user-select: none;
+}
+
+.qt-header:active {
+  cursor: grabbing;
+}
+
+.qt-title {
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qt-cached {
+  font-size: 10px;
+  font-weight: normal;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.qt-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.qt-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.qt-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.qt-close:hover {
+  background: #e53935;
+}
+
+.qt-original {
+  padding: 12px 15px;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.4;
+  border-bottom: 1px solid #eee;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.qt-arrow {
+  text-align: center;
+  color: #2196F3;
+  font-size: 18px;
+  padding: 5px;
+}
+
+.qt-translated {
+  padding: 12px 15px;
+  color: #2196F3;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.qt-suggestions {
+  padding: 8px 15px;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.qt-sug-label {
+  font-size: 12px;
+}
+
+.qt-sug-item {
+  background: #f5f5f5;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.qt-sug-item:hover {
+  background: #e3f2fd;
+  color: #1976D2;
+}
+
+.qt-footer {
+  padding: 10px 15px;
+  background: #fafafa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #eee;
+}
+
+.qt-copy-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.qt-copy-btn:hover {
+  background: #43A047;
+}
+
+.qt-lang {
+  font-size: 11px;
+  color: #999;
+}
+
+.qt-pause-indicator {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: #ff9800;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 2147483647;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease-out;
+}
+
+.qt-pause-indicator.qt-show {
+  transform: translateX(-50%) translateY(0);
+}

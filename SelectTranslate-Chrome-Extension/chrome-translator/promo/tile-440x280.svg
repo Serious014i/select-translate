@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 280">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#42A5F5"/>
+      <stop offset="100%" style="stop-color:#1565C0"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="440" height="280" fill="url(#bg)"/>
+  
+  <!-- Icon -->
+  <circle cx="100" cy="140" r="55" fill="rgba(255,255,255,0.2)"/>
+  <circle cx="100" cy="140" r="40" fill="white" opacity="0.95"/>
+  <text x="100" y="152" font-family="Arial, sans-serif" font-size="28" fill="#1976D2" text-anchor="middle" font-weight="bold">ST</text>
+  
+  <!-- Text -->
+  <text x="180" y="115" font-family="Arial, sans-serif" font-size="28" fill="white" font-weight="bold">SelectTranslate</text>
+  <text x="180" y="150" font-family="Arial, sans-serif" font-size="16" fill="rgba(255,255,255,0.9)">Instant translation for Chrome</text>
+  <text x="180" y="180" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.8)">✓ 40+ Languages  ✓ History  ✓ Export</text>
+  
+  <!-- Bottom highlight -->
+  <rect x="0" y="240" width="440" height="40" fill="rgba(0,0,0,0.1)"/>
+  <text x="220" y="267" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle">Free • Fast • Private</text>
+</svg>
