@@ -12,11 +12,11 @@
         <span id="pauseIcon">▶</span>
       </button>
     </div>
-    
+
     <div id="pauseBanner" class="pause-banner hidden">
       ⏸ Translation Paused
     </div>
-    
+
     <div class="lang-row">
       <select id="sourceLang" class="lang-select">
         <option value="auto">🔍 Auto-detect</option>
@@ -24,7 +24,7 @@
       <button id="swapBtn" class="swap-btn" title="Swap languages">⇄</button>
       <select id="targetLang" class="lang-select"></select>
     </div>
-    
+
     <div class="input-section">
       <textarea id="inputText" placeholder="Enter text to translate..." rows="3"></textarea>
       <div class="input-actions">
@@ -33,22 +33,22 @@
         <button id="clearBtn" class="icon-btn" title="Clear">🗑</button>
       </div>
     </div>
-    
+
     <button id="translateBtn" class="translate-btn">
       <span id="translateText">🔄 Translate</span>
     </button>
-    
+
     <div class="output-section">
       <div id="outputText" class="output-text">Translation will appear here...</div>
       <div id="suggestions" class="suggestions hidden"></div>
       <button id="copyBtn" class="copy-btn" title="Copy translation">📋 Copy</button>
     </div>
-    
+
     <div class="tabs">
       <button class="tab active" data-tab="settings">⚙️ Settings</button>
       <button class="tab" data-tab="history">📜 History</button>
     </div>
-    
+
     <div id="settingsTab" class="tab-content">
       <label class="checkbox-row">
         <input type="checkbox" id="autoTranslate" checked>
@@ -59,11 +59,11 @@
         <span>Show popup near selection</span>
       </label>
       <div class="cache-info">
-        <span>💾 Cache: <span id="cacheCount">0</span>/5000 translations</span>
+        <span>💾 Cache: <span id="cacheCount">0</span>/10000 translations</span>
         <button id="clearCacheBtn" class="small-btn">Clear</button>
       </div>
     </div>
-    
+
     <div id="historyTab" class="tab-content hidden">
       <div class="history-header">
         <span id="historyCount">0 items</span>
@@ -75,7 +75,7 @@
       </div>
       <div id="historyList" class="history-list"></div>
     </div>
-    
+
     <div class="footer">
       <div class="shortcuts">
         <span class="shortcut">Ctrl+Shift+T translate</span>
@@ -84,7 +84,7 @@
       <a href="#" id="donateLink" class="donate-link" title="Support development">☕ Donate</a>
     </div>
   </div>
-  
+
   <script src="popup.js"></script>
 </body>
 </html>

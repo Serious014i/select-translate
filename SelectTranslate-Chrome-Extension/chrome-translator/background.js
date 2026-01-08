@@ -344,6 +344,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     return true;
   }
+
+  if (request.action === 'getCacheStats') {
+    sendResponse({ cacheSize: memoryCache.size });
+    return true;
+  }
+
+  if (request.action === 'clearCache') {
+    memoryCache.clear();
+    chrome.storage.local.set({ translationCache: {} });
+    sendResponse({ success: true });
+    return true;
+  }
 });
 
 async function checkNativeHost() {
